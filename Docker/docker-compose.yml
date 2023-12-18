@@ -1,0 +1,30 @@
+version: '3.12'
+services:
+  servidor1:
+    build:
+      context: ./servidor1 # Ruta del docker file
+      dockerfile: Dockerfile
+    container_name: servidor1
+    ports:
+      - 5008:5002
+    networks:
+      - red1
+    volumes:
+      # La ruta del contenedor
+      - ./datos:/app/data
+
+
+  servidor2:
+    build:
+      context: ./servidor2 # Ruta del docker file
+      dockerfile: Dockerfile
+    container_name: servidor2
+    ports:
+      - 5004:5003
+    networks:
+      - red1
+networks:
+  red1:
+
+volumes:
+  datos:
