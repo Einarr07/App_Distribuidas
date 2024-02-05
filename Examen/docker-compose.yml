@@ -1,0 +1,70 @@
+version: '3'
+
+services:
+  mysql_master1:
+    image: mysql:latest
+    container_name: mysql_master1
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=replica
+    command: --server-id=1 --log-bin=mysql-bin --binlog-do-db=replica
+
+  mysql_master2:
+    image: mysql:latest
+    container_name: mysql_master2
+    ports:
+      - 3307:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=replica
+      - MYSQL_MASTER_HOST=mysql_master1
+      - MYSQL_MASTER_PORT=3306
+      - MYSQL_MASTER_USER=root
+      - MYSQL_MASTER_PASSWORD=root
+    command: --server-id=2 --log-bin=mysql-bin --binlog-do-db=replica
+
+  phpmyadmin1:
+    image: phpmyadmin:latest
+    container_name: phpmyadmin1
+    ports:
+      - 8081:80
+    environment:
+      PMA_HOST: "mysql_master1"
+      PMA_ARBITRARY: 1
+    depends_on:
+      - mysql_master1
+    networks:
+      - my_network
+
+  phpmyadmin2:
+    image: phpmyadmin:latest
+    container_name: phpmyadmin2
+    ports:
+      - 8082:80
+    environment:
+      PMA_HOST: "mysql_master2"
+      PMA_ARBITRARY: 1
+    depends_on:
+      - mysql_master2
+    networks:
+      - my_network
+
+  nginx_load_balancer:
+    image: nginx:latest
+    container_name: nginx_load_balancer
+    ports:
+      - 8080:80
+    depends_on:
+      - phpmyadmin1
+      - phpmyadmin2
+    networks:
+      - my_network
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    
+
+networks:
+  my_network:
+    external: true
